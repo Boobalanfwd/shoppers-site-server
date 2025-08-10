@@ -12,12 +12,15 @@ import {
 // Register new user
 export const register = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, passwordHash, gender, dob } = req.body;
 
         const result = await createUser({
             name,
             email,
-            password
+            passwordHash,
+            role: 'customer', // Default role for registration
+            gender,
+            dob
         });
 
         res.status(201).json({
@@ -35,6 +38,13 @@ export const register = async (req, res) => {
             });
         }
 
+        if (error.message === 'Email is required' || error.message === 'Password is required') {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -45,11 +55,11 @@ export const register = async (req, res) => {
 // Login user
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, passwordHash } = req.body;
 
         const result = await loginUser({
             email,
-            password
+            passwordHash
         });
 
         res.status(200).json({
@@ -62,6 +72,13 @@ export const login = async (req, res) => {
         
         if (error.message === 'Invalid email or password') {
             return res.status(401).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        if (error.message === 'Email is required' || error.message === 'Password is required') {
+            return res.status(400).json({
                 success: false,
                 message: error.message
             });
@@ -319,6 +336,45 @@ export const deleteProfile = async (req, res) => {
         
         if (error.message === 'User not found') {
             return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+// Create user (admin only)
+export const createUserByAdmin = async (req, res) => {
+    try {
+        const { name, email, passwordHash, role = 'customer', gender, dob } = req.body;
+
+        const result = await createUser({
+            name,
+            email,
+            passwordHash,
+            role,
+            gender,
+            dob
+        });
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('Create user error:', error);
+        
+        if (error.message === 'User with this email already exists') {
+            return res.status(409).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        if (error.message === 'Email is required' || error.message === 'Password is required') {
+            return res.status(400).json({
                 success: false,
                 message: error.message
             });

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -15,6 +15,9 @@ export const generateToken = (userId) => {
 
 // Hash password
 export const hashPassword = async (password) => {
+    if (!password) {
+        throw new Error('Password is required for hashing');
+    }
     const saltRounds = 12;
     return await bcrypt.hash(password, saltRounds);
 };
@@ -27,7 +30,15 @@ export const comparePassword = async (password, hashedPassword) => {
 // Create new user
 export const createUser = async (userData) => {
     try {
-        const { name, email, password } = userData;
+        const { name, email, passwordHash, role = 'customer', gender, dob } = userData;
+
+        // Validate required fields
+        if (!email) {
+            throw new Error('Email is required');
+        }
+        if (!passwordHash) {
+            throw new Error('Password is required');
+        }
 
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
@@ -39,19 +50,25 @@ export const createUser = async (userData) => {
         }
 
         // Hash password
-        const hashedPassword = await hashPassword(password);
+        const hashedPassword = await hashPassword(passwordHash);
 
         // Create user
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
-                passwordHash: hashedPassword
+                passwordHash: hashedPassword,
+                role,
+                gender,
+                dob: dob ? new Date(dob) : null
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
+                role: true,
+                gender: true,
+                dob: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -73,6 +90,14 @@ export const createUser = async (userData) => {
 export const loginUser = async (credentials) => {
     try {
         const { email, password } = credentials;
+
+        // Validate required fields
+        if (!email) {
+            throw new Error('Email is required');
+        }
+        if (!password) {
+            throw new Error('Password is required');
+        }
 
         // Find user by email
         const user = await prisma.user.findUnique({
@@ -103,6 +128,9 @@ export const loginUser = async (credentials) => {
             id: user.id,
             name: user.name,
             email: user.email,
+            role: user.role,
+            gender: user.gender,
+            dob: user.dob,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
@@ -135,6 +163,9 @@ export const getAllUsers = async (page = 1, limit = 10, search = '') => {
                     id: true,
                     name: true,
                     email: true,
+                    role: true,
+                    gender: true,
+                    dob: true,
                     createdAt: true,
                     updatedAt: true
                 },
@@ -172,6 +203,9 @@ export const getUserById = async (userId) => {
                 id: true,
                 name: true,
                 email: true,
+                role: true,
+                gender: true,
+                dob: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -190,7 +224,7 @@ export const getUserById = async (userId) => {
 // Update user
 export const updateUser = async (userId, updateData) => {
     try {
-        const { name, email } = updateData;
+        const { name, email, role, gender, dob } = updateData;
 
         // Check if email is being updated and if it already exists
         if (email) {
@@ -210,12 +244,18 @@ export const updateUser = async (userId, updateData) => {
             where: { id: userId },
             data: {
                 ...(name && { name }),
-                ...(email && { email })
+                ...(email && { email }),
+                ...(role && { role }),
+                ...(gender && { gender }),
+                ...(dob && { dob: new Date(dob) })
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
+                role: true,
+                gender: true,
+                dob: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -295,6 +335,9 @@ export const getUserProfile = async (userId) => {
                 id: true,
                 name: true,
                 email: true,
+                role: true,
+                gender: true,
+                dob: true,
                 createdAt: true,
                 updatedAt: true
             }

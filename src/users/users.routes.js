@@ -10,7 +10,8 @@ import {
     updateProfile,
     changeUserPassword,
     deleteUserById,
-    deleteProfile
+    deleteProfile,
+    createUserByAdmin
 } from './users.controller.js';
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.delete('/profile', verifyToken, deleteProfile);
 
 // Admin routes (for managing users)
 router.get('/', verifyToken, getUsers);
+router.post('/', createUserByAdmin);
 router.get('/:userId', verifyToken, getUser);
 router.put('/:userId', verifyToken, updateUserById);
 router.delete('/:userId', verifyToken, deleteUserById);
