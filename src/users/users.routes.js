@@ -21,17 +21,17 @@ router.post("/register", register);
 router.post("/login", login);
 
 // Protected routes (authentication required)
-router.get("/profile", verifyToken, getProfile);
-router.put("/profile", verifyToken, updateProfile);
-router.put("/profile/password", verifyToken, changeUserPassword);
-router.delete("/profile", verifyToken, deleteProfile);
+router.get("/profile", getProfile);
+router.put("/profile", updateProfile);
+router.put("/profile/password", changeUserPassword);
+router.delete("/profile", deleteProfile);
 
 // Admin routes (for managing users) - Temporarily removed auth for testing
 router.get("/", getUsers);
 router.post("/", createUserByAdmin);
-router.get("/:userId", verifyToken, getUser);
-router.put("/:userId", verifyToken, updateUserById);
-router.delete("/:userId", verifyToken, deleteUserById);
+router.get("/:userId", getUser);
+router.put("/:userId", updateUserById);
+router.delete("/:userId", deleteUserById);
 
 // Temporary test route (remove in production)
 router.get("/test/public", (req, res) => {
