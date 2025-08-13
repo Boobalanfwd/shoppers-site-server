@@ -55,10 +55,10 @@ model OtpCode {
 
 // ---------------- CATEGORY ----------------
 model Category {
-  id       Int        @id @default(autoincrement())
+  id       String     @id @default(uuid())
   name     String
   slug     String     @unique
-  parentId Int?
+  parentId String?
   parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children Category[] @relation("CategoryChildren")
   products Product[]
@@ -66,12 +66,10 @@ model Category {
 
 // ---------------- PRODUCT TYPE ----------------
 model ProductType {
-  id                 Int                    @id @default(autoincrement())
+  id                 String                 @id @default(uuid())
   name               String
   slug               String                 @unique
-  hasVariants        Boolean                @default(true)
-  isShippingRequired Boolean                @default(true)
-  isDigital          Boolean                @default(false)
+  hasVariants        Boolean?                @default(true)
   productAttributes  ProductTypeAttribute[]
   variantAttributes  VariantAttribute[]
   products           Product[]
@@ -79,10 +77,9 @@ model ProductType {
 
 // ---------------- ATTRIBUTE SYSTEM ----------------
 model Attribute {
-  id                     Int                     @id @default(autoincrement())
+  id                     String                  @id @default(uuid())
   name                   String
   slug                   String                  @unique
-  type                   String // e.g., "DROPDOWN", "TEXT", "NUMERIC"
   values                 AttributeValue[]
   productTypeAttributes  ProductTypeAttribute[]
   variantAttributes      VariantAttribute[]
@@ -90,37 +87,37 @@ model Attribute {
 }
 
 model AttributeValue {
-  id                     Int                     @id @default(autoincrement())
+  id                     String                  @id @default(uuid())
   value                  String
-  attributeId            Int
+  attributeId            String
   attribute              Attribute               @relation(fields: [attributeId], references: [id])
   variantAttributeValues VariantAttributeValue[]
 }
 
 model ProductTypeAttribute {
-  id            Int         @id @default(autoincrement())
-  productTypeId Int
-  attributeId   Int
+  id            String     @id @default(uuid())
+  productTypeId String
+  attributeId   String
   productType   ProductType @relation(fields: [productTypeId], references: [id])
   attribute     Attribute   @relation(fields: [attributeId], references: [id])
 }
 
 model VariantAttribute {
-  id            Int         @id @default(autoincrement())
-  productTypeId Int
-  attributeId   Int
+  id            String     @id @default(uuid())
+  productTypeId String
+  attributeId   String
   productType   ProductType @relation(fields: [productTypeId], references: [id])
   attribute     Attribute   @relation(fields: [attributeId], references: [id])
 }
 
 // ---------------- PRODUCT ----------------
 model Product {
-  id            Int              @id @default(autoincrement())
+  id            String           @id @default(uuid())
   name          String
   slug          String           @unique
   description   String?
-  productTypeId Int
-  categoryId    Int?
+  productTypeId String
+  categoryId    String?
   productType   ProductType      @relation(fields: [productTypeId], references: [id])
   category      Category?        @relation(fields: [categoryId], references: [id])
   variants      ProductVariant[]
@@ -128,23 +125,23 @@ model Product {
 
 // ---------------- PRODUCT VARIANT ----------------
 model ProductVariant {
-  id         Int                     @id @default(autoincrement())
+  id         String       @id @default(uuid())
   name       String
-  sku        String                  @unique
-  productId  Int
-  product    Product                 @relation(fields: [productId], references: [id])
+  sku        String    @unique
+  price      Decimal   @db.Decimal(10, 2)
+  stock      Int       @default(0)
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id])
   attributes VariantAttributeValue[]
-
   cartItems  CartItem[]
   orderItems OrderItem[]
 }
-
 // ---------------- VARIANT ATTRIBUTE VALUES ----------------
 model VariantAttributeValue {
-  id               Int            @id @default(autoincrement())
-  variantId        Int
-  attributeId      Int
-  attributeValueId Int
+  id               String         @id @default(uuid())
+  variantId        String
+  attributeId      String
+  attributeValueId String
   variant          ProductVariant @relation(fields: [variantId], references: [id])
   attribute        Attribute      @relation(fields: [attributeId], references: [id])
   attributeValue   AttributeValue @relation(fields: [attributeValueId], references: [id])
@@ -177,7 +174,7 @@ model OrderItem {
   order         Order          @relation(fields: [orderId], references: [id])
   orderId       Int
   combination   ProductVariant @relation(fields: [combinationId], references: [id])
-  combinationId Int
+  combinationId String
   quantity      Int
   price         Decimal        @db.Decimal(10, 2)
 }
@@ -232,7 +229,7 @@ model CartItem {
   cart          Cart           @relation(fields: [cartId], references: [id])
   cartId        String
   combination   ProductVariant @relation(fields: [combinationId], references: [id])
-  combinationId Int
+  combinationId String
   quantity      Int            @default(1)
   price         Decimal        @db.Decimal(10, 2)
 
